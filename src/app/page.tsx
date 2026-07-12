@@ -5,9 +5,10 @@ import { StockDashboard } from '@/components/brvm/StockDashboard';
 import { RankingsTable } from '@/components/brvm/RankingsTable';
 import { CompareModal } from '@/components/brvm/CompareModal';
 import { RecommendationsDashboard } from '@/components/brvm/RecommendationsDashboard';
+import { HotNewsDashboard } from '@/components/brvm/HotNewsDashboard';
 import { AuthGate } from '@/components/auth/AuthGate';
 import { UserMenu } from '@/components/auth/UserMenu';
-import { TrendingUp, BarChart3, Info, GitCompare, Award } from 'lucide-react';
+import { TrendingUp, BarChart3, Info, GitCompare, Award, Briefcase, Newspaper } from 'lucide-react';
 
 interface StockMeta {
   ticker: string;
@@ -37,12 +38,13 @@ interface RankingRow {
   inTopBRVM30: boolean;
 }
 
-type View = 'dashboard' | 'rankings' | 'recommendations';
+type View = 'dashboard' | 'rankings' | 'recommendations' | 'news';
 
 const VIEW_FEATURE_NAMES: Record<View, string> = {
   recommendations: 'aux recommandations (Top Achats / Ventes)',
   dashboard: "à l'analyse détaillée des actions",
   rankings: 'au palmarès complet',
+  news: 'aux actualités boursières',
 };
 
 export default function Home() {
@@ -103,6 +105,17 @@ export default function Home() {
               Recommandations
             </button>
             <button
+              onClick={() => setView('news')}
+              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                view === 'news'
+                  ? 'bg-brvm-card text-brvm-accent border border-brvm-border'
+                  : 'text-brvm-fg-muted hover:text-brvm-fg'
+              }`}
+            >
+              <Newspaper className="w-4 h-4 inline mr-1.5" />
+              Hot News
+            </button>
+            <button
               onClick={() => setView('dashboard')}
               className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                 view === 'dashboard'
@@ -131,11 +144,18 @@ export default function Home() {
               <GitCompare className="w-4 h-4 inline mr-1.5" />
               Comparer
             </button>
+            <a
+              href="/portfolio"
+              className="px-3 py-1.5 rounded text-sm font-medium text-brvm-accent hover:bg-brvm-accent/10 border border-brvm-accent/30 hover:border-brvm-accent transition-colors flex items-center gap-1.5"
+            >
+              <Briefcase className="w-4 h-4" />
+              Mon Portefeuille
+            </a>
           </nav>
           
           {/* User menu */}
           <UserMenu />
-
+ 
           {/* Live indicator */}
           <div className="flex items-center gap-1.5 text-xs text-brvm-fg-muted">
             <span className="w-2 h-2 rounded-full bg-brvm-accent pulse-live" />
@@ -143,7 +163,7 @@ export default function Home() {
           </div>
         </div>
       </header>
-
+ 
       {/* Main content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-5">
         <AuthGate featureName={VIEW_FEATURE_NAMES[view]}>
@@ -155,6 +175,8 @@ export default function Home() {
             ) : (
               <StockDashboard stocks={stocks} initialTicker={selectedTicker} />
             )
+          ) : view === 'news' ? (
+            <HotNewsDashboard />
           ) : (
             <RankingsTable rows={rankings} onSelectStock={handleSelectStock} />
           )}

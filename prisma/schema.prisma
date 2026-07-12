@@ -29,9 +29,11 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  subscriptions Subscription[]
-  payments      Payment[]
-  sessions      Session[]
+  subscriptions     Subscription[]
+  payments          Payment[]
+  sessions          Session[]
+  portfolioConfig   PortfolioConfig?
+  positions         PortfolioPosition[]
 }
 
 model Session {
@@ -140,4 +142,52 @@ model MarketQuote {
   @@unique([ticker, tradeDate])
   @@index([tradeDate])
   @@index([ticker])
+}
+
+// === PORTEFEUILLE ===
+
+// Configuration financière personnelle de l'utilisateur
+// Le seuil de rendement (yieldThresholdPct) est calculé automatiquement
+// par l'application en fonction de l'objectif, durée et mise initiale.
+model PortfolioConfig {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  targetAmountXOF    Float    // Montant cible total à atteindre (XOF)
+  initialAmountXOF   Float    // Mise de départ / capital initial (XOF)
+  targetYears        Int      // Durée cible en années
+  yieldThresholdPct  Float    // Seuil de rendement calculé par l'app (% annuel requis)
+  monthlyContribXOF  Float    // Versement mensuel calculé par l'app (XOF)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Une position boursière dans le portefeuille d'un utilisateur
+// Supporte : ouverture (open), vente partielle ou totale (sold)
+model PortfolioPosition {
+  id                String    @id @default(cuid())
+  userId            String
+  ticker            String    // ex: "ETIT.tg"
+  name              String    // Nom complet de la société
+  acquisitionDate   DateTime  // Date d'achat
+  acquisitionPrice  Float     // Prix unitaire à l'achat (XOF)
+  quantity          Int       // Nombre de titres achetés
+  totalCostXOF      Float     // Prix total à l'achat = acquisitionPrice * quantity
+  status            String    @default("open")  // "open" | "sold"
+  saleDate          DateTime? // Date de vente (si status = sold)
+  salePrice         Float?    // Prix unitaire à la vente (XOF)
+  saleTotalXOF      Float?    // Total encaissé à la vente
+  realizedGainXOF   Float?    // Gain/perte réalisé (saleTotalXOF - totalCostXOF)
+  notes             String?
+  alertSentAt       DateTime? // Dernière alerte email envoyée (anti-spam)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([ticker])
+  @@index([status])
+  @@index([userId, status])
 }

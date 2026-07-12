@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   TrendingUp, TrendingDown, Droplet, Users, Activity, Award,
   RefreshCw, AlertTriangle, CheckCircle2, XCircle, MinusCircle,
-  ArrowUpRight, ArrowDownRight, Globe, Building2,
+  ArrowUpRight, ArrowDownRight, Globe, Building2, Newspaper, ExternalLink, Calendar, Loader2,
 } from 'lucide-react';
 import { StockSelector } from './StockSelector';
 import { ScoreGauge } from './ScoreGauge';
@@ -596,6 +596,9 @@ function DashboardContent({ stock, analysis }: { stock: StockData; analysis: Ana
           </div>
         </div>
       </div>
+
+      {/* Actualités de la valeur */}
+      <StockNewsSection ticker={stock.ticker} />
     </div>
   );
 }
@@ -865,6 +868,129 @@ function PerDynamismCard({
         {perTrend5ans === 'croissant' && (perTrend5ansPct ?? 0) > 20 && (
           <div className="text-xs text-brvm-down mt-1">✗ Alerte: risque croissant, ne pas acheter</div>
         )}
+      </div>
+    </div>
+  );
+}
+
+interface BRVMNews {
+  title: string;
+  summary: string;
+  url: string;
+  date: string;
+  source: string;
+  category: string;
+}
+
+function StockNewsSection({ ticker }: { ticker: string }) {
+  const [news, setNews] = useState<BRVMNews[]>([]);
+  const [generalNews, setGeneralNews] = useState<BRVMNews[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchNews() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [tickerRes, generalRes] = await Promise.all([
+          fetch(`/api/brvm/news?ticker=${encodeURIComponent(ticker)}`),
+          fetch('/api/brvm/news'),
+        ]);
+
+        if (!tickerRes.ok || !generalRes.ok) {
+          throw new Error('Erreur de chargement des actualités.');
+        }
+
+        const tickerData = await tickerRes.json();
+        const generalData = await generalRes.json();
+
+        setNews(tickerData.news || []);
+        setGeneralNews(generalData.news || []);
+      } catch (err: any) {
+        setError(err.message || 'Une erreur est survenue.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchNews();
+  }, [ticker]);
+
+  if (loading) {
+    return (
+      <div className="brvm-card rounded-lg p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Loader2 className="w-4 h-4 animate-spin text-brvm-accent" />
+          <span className="text-xs text-brvm-fg-muted">Chargement des actualités...</span>
+        </div>
+        <div className="shimmer h-20 rounded" />
+      </div>
+    );
+  }
+
+  if (error) return null;
+
+  const hasTickerNews = news.length > 0;
+  const displayNews = hasTickerNews ? news : generalNews.slice(0, 3);
+
+  return (
+    <div className="brvm-card rounded-lg p-5">
+      <div className="flex items-center justify-between mb-4 border-b border-brvm-border pb-2">
+        <div className="flex items-center gap-2">
+          <Newspaper className="w-4 h-4 text-brvm-accent" />
+          <h3 className="text-sm font-semibold text-brvm-fg uppercase tracking-wider">
+            {hasTickerNews ? "Actualités de la valeur" : "Dernières actualités BRVM (Général)"}
+          </h3>
+        </div>
+        {hasTickerNews && (
+          <span className="text-xs px-2 py-0.5 rounded bg-brvm-accent/15 text-brvm-accent font-mono font-semibold">
+            {news.length}
+          </span>
+        )}
+      </div>
+
+      {!hasTickerNews && (
+        <div className="text-xs text-brvm-fg-dim mb-3 italic">
+          Aucune actualité spécifique trouvée pour cette société. Affichage des dernières actualités générales du marché :
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {displayNews.map((item, idx) => (
+          <div 
+            key={idx} 
+            className="p-3 bg-brvm-bg-soft/50 hover:bg-brvm-card-hover/40 border border-brvm-border rounded-md transition-colors flex flex-col md:flex-row justify-between md:items-start gap-2"
+          >
+            <div className="space-y-1 flex-1">
+              <div className="flex items-center gap-2 text-[10px]">
+                <span className="text-brvm-accent font-semibold uppercase">{item.category}</span>
+                <span className="text-brvm-fg-dim">•</span>
+                <span className="text-brvm-fg-dim font-mono">{item.date}</span>
+              </div>
+              <h4 className="font-bold text-sm text-brvm-fg leading-snug">
+                <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:text-brvm-accent transition-colors">
+                  {item.title}
+                </a>
+              </h4>
+              <p className="text-xs text-brvm-fg-muted line-clamp-2 leading-relaxed">
+                {item.summary}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end self-end md:self-start">
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-brvm-info hover:text-brvm-accent transition-colors whitespace-nowrap font-medium"
+              >
+                Lire la suite
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
