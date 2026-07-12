@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // SQLite pour le dev/démo - bascule PostgreSQL en production via DATABASE_URL
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// === AUTHENTIFICATION ===
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  firstName     String?
+  lastName      String?
+  phone         String?
+  country       String?  // Code pays: CI, SN, BF, ML, BJ
+  role          String   @default("user")  // user | admin
+  emailValidated Boolean @default(false)
+  emailValidationToken String?
+  emailValidationOtp    String?  // OTP 6 chiffres pour validation
+  emailValidationExpiresAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subscriptions Subscription[]
+  payments      Payment[]
+  sessions      Session[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique  // JWT token
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+// === ABONNEMENTS ===
+
+model Subscription {
+  id              String   @id @default(cuid())
+  userId          String
+  planId          String   // "1mois" | "3mois" | "6mois" | "12mois"
+  planName        String   // "1 mois" | "3 mois" | "6 mois" | "12 mois"
+  durationMonths  Int      // 1, 3, 6, 12
+  amountXOF       Int      // montant payé en XOF
+  startDate       DateTime
+  endDate         DateTime
+  status          String   @default("active")  // active | expired | cancelled | pending
+  paymentId       String?  // lien vers le paiement associé
+  autoRenew       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payment         Payment?
+
+  @@index([userId])
+  @@index([status])
+  @@index([endDate])
+}
+
+// === PAIEMENTS ===
+
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String
+  subscriptionId  String?  @unique
+  amountXOF       Int
+  currency        String   @default("XOF")
+  method          String   // "orange_money" | "visa_3ds"
+  provider        String   // "orange_money_ci/sn/bf/ml/bj" | "stripe"
+  status          String   @default("pending")  // pending | succeeded | failed | cancelled | refunded
+  providerPaymentId String?  // ID paiement côté provider (Orange Money txn id, Stripe payment intent id)
+  providerRef     String?  // Référence interne générée
+  failureReason   String?
+  metadata        String?  // JSON string pour données additionnelles
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([providerPaymentId])
+}
+
+// === CODES DE PAIEMENT ORANGE MONEY ===
+// Stocke les codes de validation Orange Money (mode marchand USSD)
+
+model OrangeMoneyPayment {
+  id              String   @id @default(cuid())
+  paymentId       String   @unique
+  country         String   // CI, SN, BF, ML, BJ
+  merchantNumber  String   // numéro marchand
+  customerMsisdn  String?  // numéro client Orange Money
+  amount          Int
+  reference       String   @unique
+  status          String   @default("pending")  // pending | completed | failed
+  txnId           String?  // ID transaction Orange Money (retourné après confirmation)
+  otpCode         String?  // code OTP pour validation (mode sandbox)
+  createdAt       DateTime @default(now())
+  validatedAt     DateTime?
+}
+
+// === COTATIONS MARCHÉ BRVM ===
+// Stocke les cotations journalières (une ligne par ticker+jour)
+// Chaque passage du cron écrase les valeurs du même jour (upsert)
+// Le cron s'exécute toutes les 30 min entre l'ouverture et 17h00 (heure BRVM = UTC)
+
+model MarketQuote {
+  id             String   @id @default(cuid())
+  ticker         String   // ex: "ETIT.tg"
+  tradeDate      String   // YYYY-MM-DD au format ISO (heure BRVM = UTC)
+  name           String
+  ouverture      Float    @default(0)
+  plusHaut       Float    @default(0)
+  plusBas        Float    @default(0)
+  dernier        Float    @default(0)
+  variation      Float    @default(0)
+  volumeTitres   Float    @default(0)
+  volumeXOF      Float    @default(0)
+  inTopBRVM30    Boolean  @default(false)
+  scrapedAt      DateTime // horodatage du dernier scraping
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([ticker, tradeDate])
+  @@index([tradeDate])
+  @@index([ticker])
+}

@@ -1,0 +1,180 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* BRVM Bloomberg-style palette */
+  --color-brvm-bg: #0A0E1A;
+  --color-brvm-bg-soft: #111729;
+  --color-brvm-card: #161D33;
+  --color-brvm-card-hover: #1C2440;
+  --color-brvm-border: #1F2942;
+  --color-brvm-border-soft: #2A3552;
+  --color-brvm-fg: #E8EEF7;
+  --color-brvm-fg-muted: #8B95B0;
+  --color-brvm-fg-dim: #5C6789;
+  --color-brvm-accent: #00D678;
+  --color-brvm-accent-soft: #00B86A;
+  --color-brvm-danger: #FF4757;
+  --color-brvm-warning: #FFA500;
+  --color-brvm-info: #4DA3FF;
+  --color-brvm-up: #00D678;
+  --color-brvm-down: #FF4757;
+  --color-brvm-neutral: #FFA500;
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: #0A0E1A;
+  --foreground: #E8EEF7;
+  --card: #161D33;
+  --card-foreground: #E8EEF7;
+  --popover: #161D33;
+  --popover-foreground: #E8EEF7;
+  --primary: #00D678;
+  --primary-foreground: #0A0E1A;
+  --secondary: #1C2440;
+  --secondary-foreground: #E8EEF7;
+  --muted: #1C2440;
+  --muted-foreground: #8B95B0;
+  --accent: #1C2440;
+  --accent-foreground: #E8EEF7;
+  --destructive: #FF4757;
+  --border: #1F2942;
+  --input: #1F2942;
+  --ring: #00D678;
+  --chart-1: #00D678;
+  --chart-2: #4DA3FF;
+  --chart-3: #FFA500;
+  --chart-4: #FF4757;
+  --chart-5: #B47CFF;
+  --sidebar: #111729;
+  --sidebar-foreground: #E8EEF7;
+  --sidebar-primary: #00D678;
+  --sidebar-primary-foreground: #0A0E1A;
+  --sidebar-accent: #1C2440;
+  --sidebar-accent-foreground: #E8EEF7;
+  --sidebar-border: #1F2942;
+  --sidebar-ring: #00D678;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "tnum", "lnum";
+  }
+  /* Scrollbar style */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #111729;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2A3552;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3A4570;
+  }
+}
+
+/* Animations utilitaires */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 214, 120, 0.6); }
+  50% { box-shadow: 0 0 0 8px rgba(0, 214, 120, 0); }
+}
+
+.pulse-live {
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #161D33 0px, #1C2440 40px, #161D33 80px);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Tables denses style Bloomberg */
+.brvm-table {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono), monospace;
+}
+
+.brvm-table th {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: #8B95B0;
+  font-weight: 600;
+}
+
+.brvm-table td {
+  font-size: 0.875rem;
+}
+
+/* Cards en glassmorphism subtil */
+.brvm-card {
+  background: linear-gradient(180deg, rgba(28, 36, 64, 0.4) 0%, rgba(22, 29, 51, 0.6) 100%);
+  border: 1px solid #1F2942;
+  backdrop-filter: blur(8px);
+}
+
+.brvm-card-hover:hover {
+  border-color: #2A3552;
+  background: linear-gradient(180deg, rgba(28, 36, 64, 0.6) 0%, rgba(22, 29, 51, 0.8) 100%);
+}
+
+/* Badges */
+.badge-up { background: rgba(0, 214, 120, 0.15); color: #00D678; border: 1px solid rgba(0, 214, 120, 0.3); }
+.badge-down { background: rgba(255, 71, 87, 0.15); color: #FF4757; border: 1px solid rgba(255, 71, 87, 0.3); }
+.badge-neutral { background: rgba(255, 165, 0, 0.15); color: #FFA500; border: 1px solid rgba(255, 165, 0, 0.3); }
+.badge-info { background: rgba(77, 163, 255, 0.15); color: #4DA3FF; border: 1px solid rgba(77, 163, 255, 0.3); }

@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/refresh-market",
+      "schedule": "*/30 9-17 * * 1-5"
+    },
+    {
+      "path": "/api/cron/expire-subscriptions",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
