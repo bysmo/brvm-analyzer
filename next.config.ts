@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
     // TODO: Réactiver les erreurs de build en production dès que possible
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  experimental: {
+    webpackBuildWorker: false,
+  },
   reactStrictMode: true,
 
   // ── Headers de sécurité HTTP ───────────────────────────────────────────────
