@@ -6,9 +6,8 @@ const nextConfig: NextConfig = {
     // TODO: Réactiver les erreurs de build en production dès que possible
     ignoreBuildErrors: true,
   },
-  experimental: {
-    webpackBuildWorker: false,
-  },
+  // Next.js 16 utilise Turbopack par défaut — config vide pour éviter l'erreur
+  turbopack: {},
   reactStrictMode: true,
 
   // ── Headers de sécurité HTTP ───────────────────────────────────────────────
